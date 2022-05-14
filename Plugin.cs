@@ -1,6 +1,7 @@
 ﻿using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
+using System.Reflection;
 using UnityEngine;
 
 namespace Moretar
@@ -25,8 +26,19 @@ namespace Moretar
         [HarmonyPostfix]
         static void LoadMe_Prefix(Trowel __instance)
         {
-            __instance.AmmoChange(0f);
-            __instance.NoFinesAmmoChange(0f);
+            MethodInfo ammoChangeMethodinfo = AccessTools.Method(typeof(Trowel), "AmmoChange");
+            MethodInfo noFinesAmmoChangeMethodinfo = AccessTools.Method(typeof(Trowel), "NoFinesAmmoChange");
+
+            if (ammoChangeMethodinfo.GetParameters().Length == 2)
+            {
+                ammoChangeMethodinfo.Invoke(__instance, new object[] { 0f, __instance.muckTransform.GetComponent<Renderer>().material });
+                noFinesAmmoChangeMethodinfo.Invoke(__instance, new object[] { 0f, __instance.noFinesTransform.GetComponent<Renderer>().material });
+            }
+            else
+            {
+                ammoChangeMethodinfo.Invoke(__instance, new object[] { 0f });
+                noFinesAmmoChangeMethodinfo.Invoke(__instance, new object[] { 0f });
+            }
         }
 
         [HarmonyPatch(typeof(Trowel), "AmmoChange")]
